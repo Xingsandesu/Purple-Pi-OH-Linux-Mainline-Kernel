@@ -1,0 +1,34 @@
+name: Build and Test Device Tree
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-dtb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu make flex bison libssl-dev bc
+      - name: Build device tree blob
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs
+      - name: Check DTB output
+        run: |
+          test -f arch/arm64/boot/dts/rockchip/ido-pi-oh3566-hdmi-v1.dtb
+          test -f arch/arm64/boot/dts/rockchip/ido-pi-oh3566-mipi-v1.dtb
+      - name: Upload DTB artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dtb-files
+          path: |
+            arch/arm64/boot/dts/rockchip/ido-pi-oh3566-hdmi-v1.dtb
+            arch/arm64/boot/dts/rockchip/ido-pi-oh3566-mipi-v1.dtb
